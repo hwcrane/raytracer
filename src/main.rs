@@ -15,7 +15,7 @@ use std::sync::Arc;
 
 use camera::Camera;
 use hittable_list::HittableList;
-use material::Material;
+use material::{Lambertian, Metal};
 use na::{Point3, Vector3};
 use sphere::Sphere;
 
@@ -32,31 +32,39 @@ fn main() {
     // World
     let mut world = HittableList::new();
 
-    let material_ground = Arc::new(Material::lambertian(Vector3::new(0.8, 0.8, 0.0)));
-    let material_center = Arc::new(Material::lambertian(Vector3::new(0.7, 0.3, 0.3)));
-    let material_left = Arc::new(Material::metal(Vector3::new(0.8, 0.8, 0.8)));
-    let material_right = Arc::new(Material::metal(Vector3::new(0.8, 0.6, 0.2)));
+    let material_ground = Arc::new(Lambertian {
+        albedo: Vector3::new(0.8, 0.8, 0.0),
+    });
+    let material_center = Arc::new(Lambertian {
+        albedo: Vector3::new(0.7, 0.3, 0.3),
+    });
+    let material_left = Arc::new(Metal {
+        albedo: Vector3::new(0.8, 0.8, 0.8),
+    });
+    let material_right = Arc::new(Metal {
+        albedo: Vector3::new(0.8, 0.6, 0.2),
+    });
 
-    world.add(Sphere::new_wrapped(
+    world.add(Box::new(Sphere::new(
         Point3::new(0., -100.5, -1.),
         100.,
         material_ground,
-    ));
-    world.add(Sphere::new_wrapped(
+    )));
+    world.add(Box::new(Sphere::new(
         Point3::new(0., 0., -1.),
         0.5,
         material_center,
-    ));
-    world.add(Sphere::new_wrapped(
+    )));
+    world.add(Box::new(Sphere::new(
         Point3::new(-1., 0., -1.),
         0.5,
         material_left,
-    ));
-    world.add(Sphere::new_wrapped(
+    )));
+    world.add(Box::new(Sphere::new(
         Point3::new(1., 0., -1.),
         0.5,
         material_right,
-    ));
+    )));
 
     cam.render(&world).save("output.png").unwrap();
 }

@@ -2,31 +2,27 @@ use std::sync::Arc;
 
 use nalgebra::Point3;
 
-use crate::{interval::Interval, ray::Ray, material::Material};
+use crate::{interval::Interval, material::Material, ray::Ray, hittable_trait::Hittable};
 
-use super::{hit_record::HitRecord, hittable_enum::Hittable, hittable_trait::HittableTrait};
+use super::hit_record::HitRecord;
 
 pub struct Sphere {
     center: Point3<f64>,
     radius: f64,
-    mat: Arc<Material>
+    mat: Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Point3<f64>, radius: f64, mat: Arc<Material>) -> Sphere {
-        Sphere { center, radius, mat}
-    }
-
-    pub fn wrap_hittable(self) -> Hittable {
-        Hittable::Sphere(self)
-    }
-
-    pub fn new_wrapped(center: Point3<f64>, radius: f64, mat: Arc<Material>) -> Hittable {
-        Hittable::Sphere(Sphere { center, radius, mat })
+    pub fn new(center: Point3<f64>, radius: f64, mat: Arc<dyn Material>) -> Sphere {
+        Sphere {
+            center,
+            radius,
+            mat,
+        }
     }
 }
 
-impl HittableTrait for Sphere {
+impl Hittable for Sphere {
     fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<HitRecord> {
         let oc = ray.origin() - self.center;
         let a = ray.direction().norm_squared();

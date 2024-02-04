@@ -3,8 +3,8 @@ use indicatif::ProgressBar;
 use nalgebra::{Point3, Vector3};
 
 use crate::{
-    hittable_list::HittableList, hittable_trait::HittableTrait, interval::Interval,
-    material::MaterialTrait, random::rng_unit_vec, ray::Ray,
+    interval::Interval,
+    material::Material, ray::Ray, hittable_trait::Hittable,
 };
 
 pub struct Camera {
@@ -61,7 +61,7 @@ impl Camera {
         }
     }
 
-    pub fn render(&mut self, world: &HittableList) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
+    pub fn render(&mut self, world: &dyn Hittable) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
         let bar = ProgressBar::new((self.image_height * self.image_width) as u64);
         let img = ImageBuffer::from_fn(self.image_width, self.image_height, |i, j| {
             bar.inc(1);
@@ -69,7 +69,7 @@ impl Camera {
             let colour: Vector3<f64> = (0..self.samples_per_pixel)
                 .map(|_| {
                     let r = self.get_ray(i, j);
-                    self.ray_colour(&r, self.max_depth, &world)
+                    self.ray_colour(&r, self.max_depth, world)
                 })
                 .sum();
 
@@ -95,7 +95,7 @@ impl Camera {
         (px * self.delta_u) + (py * self.delta_v)
     }
 
-    fn ray_colour(&mut self, ray: &Ray, depth: u32, world: &HittableList) -> Vector3<f64> {
+    fn ray_colour(&mut self, ray: &Ray, depth: u32, world: &dyn Hittable) -> Vector3<f64> {
         if depth <= 0 {
             Vector3::new(0., 0., 0.)
         } else if let Some(rec) = world.hit(ray, Interval::new(0.0001, f64::MAX)) {

@@ -1,11 +1,9 @@
-use std::sync::Arc;
+use crate::{interval::Interval, hittable_trait::Hittable};
 
-use crate::interval::Interval;
-
-use super::{hit_record::HitRecord, hittable_enum::Hittable, hittable_trait::HittableTrait};
+use super::hit_record::HitRecord;
 
 pub struct HittableList {
-    objects: Vec<Arc<Hittable>>,
+    objects: Vec<Box<dyn Hittable>>,
 }
 
 impl HittableList {
@@ -13,12 +11,12 @@ impl HittableList {
         HittableList { objects: vec![] }
     }
 
-    pub fn add(&mut self, object: Hittable) {
-        self.objects.push(Arc::new(object))
+    pub fn add(&mut self, object: Box<dyn Hittable>) {
+        self.objects.push(object)
     }
 }
 
-impl HittableTrait for HittableList {
+impl Hittable for HittableList {
     fn hit(&self, ray: &crate::ray::Ray, ray_t: Interval) -> Option<HitRecord> {
         let mut best_rec = None;
         let mut hit_anything = false;

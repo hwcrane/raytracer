@@ -2,49 +2,26 @@ use nalgebra::Vector3;
 
 use crate::{hit_record::HitRecord, random::rng_unit_vec, ray::Ray};
 
-pub trait MaterialTrait {
+pub trait Material {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Ray, Vector3<f64>)>;
 }
 
-pub enum Material {
-    Lambertian(Lambertian),
-    Metal(Metal),
+pub struct Lambertian {
+    pub albedo: Vector3<f64>,
 }
 
-impl MaterialTrait for Material {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Ray, Vector3<f64>)> {
-        match self {
-            Self::Lambertian(mat) => mat.scatter(ray_in, rec),
-            Self::Metal(mat) => mat.scatter(ray_in, rec),
-        }
-    }
+pub struct Metal {
+    pub albedo: Vector3<f64>,
 }
 
-impl Material {
-    pub fn lambertian(albedo: Vector3<f64>) -> Self {
-        Self::Lambertian(Lambertian { albedo })
-    }
-    pub fn metal(albedo: Vector3<f64>) -> Self {
-        Self::Metal(Metal { albedo })
-    }
-}
-
-struct Lambertian {
-    albedo: Vector3<f64>,
-}
-
-struct Metal {
-    albedo: Vector3<f64>,
-}
-
-impl MaterialTrait for Metal {
+impl Material for Metal {
    fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Ray, Vector3<f64>)> {
         let reflected = reflect(&ray_in.direction().normalize(), &rec.normal);
         Some((Ray::new(rec.point, reflected), self.albedo))
    } 
 }
 
-impl MaterialTrait for Lambertian {
+impl Material for Lambertian {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Ray, Vector3<f64>)> {
         let mut scatter_direction = rec.normal + rng_unit_vec();
 
