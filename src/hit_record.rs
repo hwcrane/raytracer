@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use na::{Point3, Vector3};
 
-use crate::{ray::Ray, material::Material};
+use crate::{materials::Material, ray::Ray};
 
 pub struct HitRecord {
     pub point: Point3<f64>,
@@ -13,7 +13,13 @@ pub struct HitRecord {
 }
 
 impl HitRecord {
-    pub fn new(point: Point3<f64>, outward_normal: Vector3<f64>, mat: &Arc<dyn Material>,t: f64, ray: &Ray) -> HitRecord {
+    pub fn new(
+        point: Point3<f64>,
+        outward_normal: Vector3<f64>,
+        mat: &Arc<dyn Material>,
+        t: f64,
+        ray: &Ray,
+    ) -> HitRecord {
         let front_face = ray.direction().dot(&outward_normal) < 0.;
         HitRecord {
             point,
@@ -22,7 +28,7 @@ impl HitRecord {
             } else {
                 -outward_normal
             },
-            mat: mat.clone(),
+            mat: Arc::clone(mat),
             t,
             front_face,
         }

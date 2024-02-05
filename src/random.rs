@@ -1,4 +1,4 @@
-use nalgebra::Vector3;
+use nalgebra::{vector, Vector3};
 use rand::Rng;
 
 pub fn rng_vec() -> Vector3<f64> {
@@ -17,7 +17,7 @@ pub fn rng_vec_bound(min: f64, max: f64) -> Vector3<f64> {
 
 pub fn rng_unit_sphere() -> Vector3<f64> {
     let mut p = rng_vec_bound(-1., 1.);
-    while p.norm_squared() < 1. {
+    while p.norm_squared() >= 1. {
         p = rng_vec_bound(-1., 1.);
     }
     p
@@ -34,4 +34,13 @@ pub fn rng_on_hemisphere(normal: &Vector3<f64>) -> Vector3<f64> {
     } else {
         -on_sphere
     }
+}
+
+pub fn rng_in_unit_disk() -> Vector3<f64> {
+    let mut rng = rand::thread_rng();
+    let mut p = vector![rng.gen_range((-1.)..=1.), rng.gen_range((-1.)..=1.), 0.];
+    while p.norm_squared() >= 1. {
+        p = vector![rng.gen_range((-1.)..=1.), rng.gen_range((-1.)..=1.), 0.];
+    }
+    p
 }

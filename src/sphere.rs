@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use nalgebra::Point3;
 
-use crate::{interval::Interval, material::Material, ray::Ray, hittable_trait::Hittable};
+use crate::{hittable::Hittable, interval::Interval, materials::Material, ray::Ray};
 
 use super::hit_record::HitRecord;
 
@@ -11,6 +11,8 @@ pub struct Sphere {
     radius: f64,
     mat: Arc<dyn Material>,
 }
+
+unsafe impl Sync for Sphere {}
 
 impl Sphere {
     pub fn new(center: Point3<f64>, radius: f64, mat: Arc<dyn Material>) -> Sphere {

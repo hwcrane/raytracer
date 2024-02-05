@@ -1,10 +1,12 @@
-use crate::{interval::Interval, hittable_trait::Hittable};
+use crate::{hittable::Hittable, interval::Interval};
 
 use super::hit_record::HitRecord;
 
 pub struct HittableList {
     objects: Vec<Box<dyn Hittable>>,
 }
+
+unsafe impl Sync for HittableList {}
 
 impl HittableList {
     pub fn new() -> HittableList {
