@@ -1,25 +1,21 @@
-use std::sync::Arc;
-
 use nalgebra::Point3;
 
-use crate::{hittable::Hittable, interval::Interval, materials::Material, ray::Ray};
+use crate::{hittable::Hittable, interval::Interval, material::Material, ray::Ray};
 
 use super::hit_record::HitRecord;
 
 pub struct Sphere {
     center: Point3<f64>,
     radius: f64,
-    mat: Arc<dyn Material>,
+    mat: Material,
 }
 
-unsafe impl Sync for Sphere {}
-
 impl Sphere {
-    pub fn new(center: Point3<f64>, radius: f64, mat: Arc<dyn Material>) -> Sphere {
+    pub fn new(center: Point3<f64>, radius: f64, mat: &Material) -> Sphere {
         Sphere {
             center,
             radius,
-            mat,
+            mat: mat.clone(),
         }
     }
 }

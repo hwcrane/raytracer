@@ -1,5 +1,3 @@
-use std::sync::{Arc, Mutex};
-
 use image::{ImageBuffer, Rgb};
 use indicatif::ProgressBar;
 use nalgebra::{vector, Point3, Vector3};
@@ -10,7 +8,7 @@ use crate::{
     ray::Ray,
 };
 
-pub struct Camera {
+pub struct CameraConfig {
     pub aspect_ratio: f64,
     pub image_width: u32,
     pub samples_per_pixel: u32,
@@ -21,6 +19,36 @@ pub struct Camera {
     pub vup: Vector3<f64>,
     pub defocus_angle: f64,
     pub focus_dist: f64,
+}
+
+impl CameraConfig {
+    pub fn construct(self) -> Camera {
+        Camera::new(
+            self.aspect_ratio,
+            self.image_width,
+            self.samples_per_pixel,
+            self.max_depth,
+            self.vfov,
+            self.lookfrom,
+            self.lookat,
+            self.vup,
+            self.defocus_angle,
+            self.focus_dist,
+        )
+    }
+}
+
+pub struct Camera {
+    aspect_ratio: f64,
+    image_width: u32,
+    samples_per_pixel: u32,
+    max_depth: u32,
+    vfov: f64,
+    lookat: Point3<f64>,
+    lookfrom: Point3<f64>,
+    vup: Vector3<f64>,
+    defocus_angle: f64,
+    focus_dist: f64,
     image_height: u32,
     center: Point3<f64>,
     pixel00_loc: Point3<f64>,
