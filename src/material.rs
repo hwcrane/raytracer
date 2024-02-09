@@ -1,28 +1,45 @@
-use nalgebra::Vector3;
+use std::sync::Arc;
+
+use nalgebra::{Vector3, Point3, vector};
 use rand::random;
 
-use crate::{hit_record::HitRecord, random::rng_unit_vec, ray::Ray};
+use crate::{hit_record::HitRecord, random::rng_unit_vec, ray::Ray, textures::Texture};
 
 #[derive(Clone)]
 pub enum Material {
-    Lambertian { albedo: Vector3<f64> },
+    Lambertian { albedo: Arc<dyn Texture> },
     Metal { albedo: Vector3<f64>, fuzz: f64 },
     Dielectric { ir: f64 },
+    DiffuseLight {emit: Arc<dyn Texture>}
 }
 
 impl Material {
+    pub fn emitted(&self, u: f64, v: f64, point: Point3<f64>) -> Vector3<f64> {
+        match self {
+            Self::DiffuseLight { emit } => emit.value(u, v, point),
+            _ => vector![0., 0., 0.]
+        }
+    }
+
     pub fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Ray, Vector3<f64>)> {
         match self {
-            Self::Lambertian { albedo } => {
+            Self::Lambertian { albedo} => {
                 let mut scatter_direction = rec.normal + rng_unit_vec();
                 if vector_near_zero(&scatter_direction) {
                     scatter_direction = rec.normal
                 }
-                Some((Ray::new(rec.point, scatter_direction), *albedo))
+                Some((
+                    Ray::with_time(rec.point, scatter_direction, *ray_in.time()),
+                    albedo.value(rec.u, rec.v, rec.point),
+                ))
             }
             Self::Metal { albedo, fuzz } => {
                 let reflected = reflect(&ray_in.direction().normalize(), &rec.normal);
-                let scattered = Ray::new(rec.point, reflected + *fuzz * rng_unit_vec());
+                let scattered = Ray::with_time(
+                    rec.point,
+                    reflected + *fuzz * rng_unit_vec(),
+                    *ray_in.time(),
+                );
                 if scattered.direction().dot(&rec.normal) > 0. {
                     Some((scattered, *albedo))
                 } else {
@@ -44,7 +61,13 @@ impl Material {
                     refract(&unit_direction, &rec.normal, refract_ratio)
                 };
 
-                Some((Ray::new(rec.point, direction), Vector3::new(1., 1., 1.)))
+                Some((
+                    Ray::with_time(rec.point, direction, *ray_in.time()),
+                    Vector3::new(1., 1., 1.),
+                ))
+            }
+            Self::DiffuseLight { emit } => {
+                None
             }
         }
     }

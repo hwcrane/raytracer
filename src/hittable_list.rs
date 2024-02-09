@@ -1,18 +1,22 @@
-use crate::{hittable::Hittable, interval::Interval};
+use std::sync::Arc;
+
+use crate::{hittable::Hittable, interval::Interval, aabb::Aabb};
 
 use super::hit_record::HitRecord;
 
 pub struct HittableList {
-    objects: Vec<Box<dyn Hittable>>,
+    pub objects: Vec<Arc<dyn Hittable>>,
+    bbox: Aabb,
 }
 
 impl HittableList {
     pub fn new() -> HittableList {
-        HittableList { objects: vec![] }
+        HittableList { objects: vec![], bbox: Aabb::default() }
     }
 
     pub fn add(&mut self, object: Box<dyn Hittable>) {
-        self.objects.push(object)
+        self.bbox = self.bbox.merge(&object.bounding_box());
+        self.objects.push(object.into());
     }
 }
 
@@ -35,5 +39,9 @@ impl Hittable for HittableList {
         } else {
             None
         }
+    }
+
+    fn bounding_box(&self) -> &Aabb {
+        &self.bbox
     }
 }

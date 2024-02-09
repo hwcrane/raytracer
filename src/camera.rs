@@ -1,6 +1,7 @@
 use image::{ImageBuffer, Rgb};
 use indicatif::ProgressBar;
 use nalgebra::{vector, Point3, Vector3};
+use rand::random;
 use rayon::prelude::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 
 use crate::{
@@ -19,6 +20,7 @@ pub struct CameraConfig {
     pub vup: Vector3<f64>,
     pub defocus_angle: f64,
     pub focus_dist: f64,
+    pub background: Vector3<f64>,
 }
 
 impl CameraConfig {
@@ -34,6 +36,7 @@ impl CameraConfig {
             self.vup,
             self.defocus_angle,
             self.focus_dist,
+            self.background,
         )
     }
 }
@@ -49,6 +52,7 @@ pub struct Camera {
     vup: Vector3<f64>,
     defocus_angle: f64,
     focus_dist: f64,
+    background: Vector3<f64>,
     image_height: u32,
     center: Point3<f64>,
     pixel00_loc: Point3<f64>,
@@ -73,6 +77,7 @@ impl Camera {
         vup: Vector3<f64>,
         defocus_angle: f64,
         focus_dist: f64,
+        background: Vector3<f64>,
     ) -> Self {
         let image_height: u32 = (image_width as f64 / aspect_ratio) as u32;
 
@@ -115,6 +120,7 @@ impl Camera {
             vup,
             defocus_angle,
             focus_dist,
+            background,
             image_height,
             center,
             pixel00_loc,
@@ -128,25 +134,7 @@ impl Camera {
         }
     }
 
-    pub fn render(&mut self, world: &dyn Hittable) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
-        let bar = ProgressBar::new((self.image_height * self.image_width) as u64);
-        let img = ImageBuffer::from_fn(self.image_width, self.image_height, |i, j| {
-            bar.inc(1);
-
-            let colour: Vector3<f64> = (0..self.samples_per_pixel)
-                .map(|_| {
-                    let r = self.get_ray(i, j);
-                    self.ray_colour(&r, self.max_depth, world)
-                })
-                .sum();
-
-            self.make_colour(colour)
-        });
-        bar.finish();
-        img
-    }
-
-    pub fn render_par(&self, world: &HittableList) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
+    pub fn render_par(&self, world: &dyn Hittable) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
         let bar = ProgressBar::new((self.image_height * self.image_width) as u64);
         let mut img = ImageBuffer::new(self.image_width, self.image_height);
         let mut pixels =
@@ -186,8 +174,9 @@ impl Camera {
             self.defocus_disk_sample()
         };
         let ray_direction = pixel_sample - ray_origin;
+        let ray_time = random();
 
-        Ray::new(ray_origin, ray_direction)
+        Ray::with_time(ray_origin, ray_direction, ray_time)
     }
 
     fn defocus_disk_sample(&self) -> Point3<f64> {
@@ -203,23 +192,29 @@ impl Camera {
     }
 
     fn ray_colour(&self, ray: &Ray, depth: u32, world: &dyn Hittable) -> Vector3<f64> {
-        if depth <= 0 {
-            vector!(0., 0., 0.)
-        } else if let Some(rec) = world.hit(ray, Interval::new(0.0001, f64::MAX)) {
-            if let Some((scattered, attenuation)) = rec.mat.scatter(ray, &rec) {
-                let col = self.ray_colour(&scattered, depth - 1, world);
-                vector!(
-                    col.x * attenuation.x,
-                    col.y * attenuation.y,
-                    col.z * attenuation.z,
-                )
-            } else {
-                vector!(0., 0., 0.)
-            }
+        if depth == 0 {
+            return vector!(0., 0., 0.);
+        }
+
+        let rec = world.hit(ray, Interval::new(0.001, f64::MAX));
+
+        if rec.is_none() {
+            return self.background;
+        }
+
+        let rec = rec.unwrap();
+
+        let colour_from_emmision = rec.mat.emitted(rec.u, rec.v, rec.point);
+
+        if let Some((scattered, attenuation)) = rec.mat.scatter(ray, &rec) {
+            let col = self.ray_colour(&scattered, depth - 1, world);
+            vector!(
+                col.x * attenuation.x + colour_from_emmision.x,
+                col.y * attenuation.y + colour_from_emmision.y,
+                col.z * attenuation.z + colour_from_emmision.z,
+            )
         } else {
-            let unit_direction = ray.direction().normalize();
-            let a = 0.5 * (unit_direction.y + 1.);
-            (1.0 - a) * vector!(1., 1., 1.) + a * vector!(0.5, 0.7, 1.0)
+            colour_from_emmision
         }
     }
 
@@ -232,10 +227,11 @@ impl Camera {
 
         let intensity = Interval::new(0., 0.999);
 
-        Rgb([
-            (intensity.clamp(r.sqrt()) * 256.) as u8,
-            (intensity.clamp(g.sqrt()) * 256.) as u8,
-            (intensity.clamp(b.sqrt()) * 256.) as u8,
-        ])
+        let col = Rgb([
+            (intensity.clamp(r.sqrt()) * 255.) as u8,
+            (intensity.clamp(g.sqrt()) * 255.) as u8,
+            (intensity.clamp(b.sqrt()) * 255.) as u8,
+        ]);
+        col
     }
 }

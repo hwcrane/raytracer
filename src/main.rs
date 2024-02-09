@@ -8,31 +8,20 @@ pub mod random;
 pub mod ray;
 pub mod sphere;
 pub mod scenes;
+pub mod aabb;
+pub mod bvh_node;
+pub mod textures;
+pub mod quad;
 
 extern crate nalgebra as na;
 
-use camera::CameraConfig;
-use na::point;
-use na::vector;
+use bvh_node::BvhNode;
 pub use na::{Point3, Vector3};
 
 fn main() {
-    // Camera
-    let cam = CameraConfig {
-        aspect_ratio: 16. / 9.,
-        image_width: 1200,
-        samples_per_pixel: 500,
-        max_depth: 50,
-        vfov: 20.,
-        lookfrom: point![13., 2., 3.],
-        lookat: point![0., 0.,0.],
-        vup: vector![0., 1., 0.],
-        defocus_angle: 0.6,
-        focus_dist: 10.,
-    }.construct();
 
-    // World
-    let world = scenes::random_balls();
+    let (world, cam) = scenes::cornel_box();
+    let nodes = BvhNode::new(&world.objects);
 
-    cam.render_par(&world).save("output.png").unwrap();
+    cam.render_par(&nodes).save("output.png").unwrap();
 }

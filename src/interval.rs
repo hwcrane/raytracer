@@ -9,6 +9,10 @@ impl Interval {
         Interval { min, max }
     }
 
+    pub fn merge(a: Interval, b: Interval) -> Interval {
+        Interval { min: a.min.min(b.min), max: a.max.max(b.max) }
+    }
+
     pub fn contains(&self, x: f64) -> bool {
         self.min <= x && x <= self.max
     }
@@ -23,6 +27,18 @@ impl Interval {
             self.max
         } else {
             x
+        }
+    }
+
+    pub fn size(&self) -> f64 {
+        self.max - self.min
+    }
+
+    pub fn expand(&self, delta: f64) -> Interval {
+        let padding = delta / 2.;
+        Interval {
+            min: self.min - padding,
+            max: self.max + padding,
         }
     }
 }
