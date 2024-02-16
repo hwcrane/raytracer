@@ -1,6 +1,8 @@
-use nalgebra::{vector, Point3, Vector3};
+use std::sync::Arc;
 
-use crate::{aabb::Aabb, hit_record::HitRecord, hittable::Hittable, material::Material};
+use nalgebra::{vector, Point3, Vector3, point};
+
+use crate::{aabb::Aabb, hit_record::HitRecord, hittable::Hittable, material::Material, hittable_list::HittableList};
 
 pub struct Quad {
     q: Point3<f64>,
@@ -77,4 +79,24 @@ impl Hittable for Quad {
     fn bounding_box(&self) -> &Aabb {
         &self.bbox
     }
+}
+
+pub fn make_box(a: Point3<f64>, b: Point3<f64>, mat: &Material) -> HittableList {
+    let mut sides = HittableList::new();
+
+    let min = point![a.x.min(b.x), a.y.min(b.y), a.z.min(b.z)];
+    let max = point![a.x.max(b.x), a.y.max(b.y), a.z.max(b.z)];
+
+    let dx = vector![max.x - min.x, 0., 0.];
+    let dy = vector![0., max.y - min.y, 0.];
+    let dz = vector![0., 0., max.z - min.z];
+
+    sides.add(Box::new(Quad::new(point![min.x, min.y, max.z], dx, dy, mat))); // front
+    sides.add(Box::new(Quad::new(point![max.x, min.y, max.z], -dz, dy, mat))); // right
+    sides.add(Box::new(Quad::new(point![max.x, min.y, min.z], -dx, dy, mat))); // back
+    sides.add(Box::new(Quad::new(point![min.x, min.y, min.z], dz, dy, mat))); // left
+    sides.add(Box::new(Quad::new(point![min.x, max.y, max.z], dx, -dz, mat))); // top
+    sides.add(Box::new(Quad::new(point![min.x, min.y, min.z], dx, dy, mat))); // top
+
+    return sides
 }

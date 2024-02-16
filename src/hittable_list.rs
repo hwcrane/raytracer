@@ -14,6 +14,12 @@ impl HittableList {
         HittableList { objects: vec![], bbox: Aabb::default() }
     }
 
+    pub fn add_list(&mut self, objects: HittableList) {
+        for obj in objects.objects {
+            self.bbox = self.bbox.merge(&obj.bounding_box());
+            self.objects.push(obj);
+        }
+    }
     pub fn add(&mut self, object: Box<dyn Hittable>) {
         self.bbox = self.bbox.merge(&object.bounding_box());
         self.objects.push(object.into());

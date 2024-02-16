@@ -10,7 +10,8 @@ pub enum Material {
     Lambertian { albedo: Arc<dyn Texture> },
     Metal { albedo: Vector3<f64>, fuzz: f64 },
     Dielectric { ir: f64 },
-    DiffuseLight {emit: Arc<dyn Texture>}
+    DiffuseLight {emit: Arc<dyn Texture>},
+    Isotropic {albedo: Arc<dyn Texture>}
 }
 
 impl Material {
@@ -66,8 +67,13 @@ impl Material {
                     Vector3::new(1., 1., 1.),
                 ))
             }
-            Self::DiffuseLight { emit } => {
+            Self::DiffuseLight { .. } => {
                 None
+            }
+            Self::Isotropic { albedo } => {
+                let scattered = Ray::with_time(rec.point, rng_unit_vec(), *ray_in.time());
+                let attenuation = albedo.value(rec.u, rec.v, rec.point);
+                Some((scattered, attenuation))
             }
         }
     }

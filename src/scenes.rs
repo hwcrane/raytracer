@@ -4,16 +4,228 @@ use nalgebra::{point, vector, Vector3};
 use rand::{random, Rng};
 
 use crate::{
+    bvh_node::BvhNode,
     camera::{Camera, CameraConfig},
+    constant_medium::ConstantMedium,
     hittable_list::HittableList,
     material::Material,
-    quad::Quad,
+    quad::{make_box, Quad},
     random::rng_vec_bound,
+    rotation::RotateY,
     sphere::Sphere,
     textures::{Checker, ImageTexture, NoiseTexture, SolidColour},
+    translate::Translate,
 };
 
 pub type Scene = fn() -> (HittableList, Camera);
+
+pub fn final_scene(
+    image_width: u32,
+    samples_per_pixel: u32,
+    max_depth: u32,
+) -> (HittableList, Camera) {
+    let cam = CameraConfig {
+        aspect_ratio: 1.,
+        image_width,
+        samples_per_pixel,
+        max_depth,
+        vfov: 40.,
+        lookfrom: point![478., 278., -600.],
+        lookat: point![278., 278., 0.],
+        vup: vector![0., 1., 0.],
+        defocus_angle: 0.,
+        focus_dist: 10.,
+        background: vector![0., 0., 0.],
+    }
+    .construct();
+
+    let mut boxes1 = HittableList::new();
+    let ground = Material::Lambertian {
+        albedo: Arc::new(SolidColour::new(vector![0.48, 0.83, 0.53])),
+    };
+
+    let boxes_per_side = 20;
+    for i in 0..boxes_per_side {
+        for j in 0..boxes_per_side {
+            let w = 100.;
+            let x0 = -1000. + i as f64 * w;
+            let z0 = -1000. + j as f64 * w;
+            let y0 = 0.;
+            let x1 = x0 + w;
+            let y1 = rand::thread_rng().gen_range(1..101) as f64;
+            let z1 = z0 + w;
+            boxes1.add(Box::new(make_box(
+                point![x0, y0, z0],
+                point![x1, y1, z1],
+                &ground,
+            )))
+        }
+    }
+
+    let mut world = HittableList::new();
+    world.add(Box::new(BvhNode::new(&boxes1.objects)));
+
+    let light = Material::DiffuseLight {
+        emit: Arc::new(SolidColour::new(vector![7., 7., 7.])),
+    };
+    world.add(Box::new(Quad::new(
+        point![123., 554., 147.],
+        vector![300., 0., 0.],
+        vector![0., 0., 265.],
+        &light,
+    )));
+
+    let center1 = point!(400., 400., 200.);
+    let center2 = center1 + vector!(30., 0., 0.);
+    let sphere_mat = Material::Lambertian {
+        albedo: Arc::new(SolidColour::new(vector![0.7, 0.3, 0.1])),
+    };
+    world.add(Box::new(Sphere::new_moving(
+        center1,
+        center2,
+        50.,
+        &sphere_mat,
+    )));
+
+    world.add(Box::new(Sphere::new(
+        point![260., 150., 145.],
+        50.,
+        &Material::Dielectric { ir: 1.5 },
+    )));
+    world.add(Box::new(Sphere::new(
+        point![0., 150., 145.],
+        50.,
+        &Material::Metal {
+            albedo: vector![0.8, 0.8, 0.9],
+            fuzz: 1.,
+        },
+    )));
+    let boundary = Sphere::new(point![0., 0., 0.], 5000., &Material::Dielectric { ir: 1.5 });
+    world.add(Box::new(ConstantMedium::new(
+        Arc::new(boundary),
+        0.0001,
+        Arc::new(SolidColour::new(vector![1., 1., 1.])),
+    )));
+
+    let emat = Material::Lambertian {
+        albedo: Arc::new(ImageTexture::new("earthmap.jpg").unwrap()),
+    };
+    world.add(Box::new(Sphere::new(point![400., 200., 400.], 100., &emat)));
+    let pertext = NoiseTexture::new(0.1);
+    world.add(Box::new(Sphere::new(
+        point![220., 280., 300.],
+        80.,
+        &Material::Lambertian {
+            albedo: Arc::new(pertext),
+        },
+    )));
+
+    let mut boxes2 = HittableList::new();
+    let white = Material::Lambertian {
+        albedo: Arc::new(SolidColour::new(vector![0.73, 0.73, 0.73])),
+    };
+    let ns = 1000;
+    for _ in 0..ns {
+        boxes2.add(Box::new(Sphere::new(
+            rng_vec_bound(0., 165.).into(),
+            10.,
+            &white,
+        )));
+    }
+
+    world.add(Box::new(Translate::new(
+        Arc::new(RotateY::new(Arc::new(BvhNode::new(&boxes2.objects)), 15.)),
+        vector![-100., 270., 395.],
+    )));
+    (world, cam)
+}
+pub fn cornel_smoke() -> (HittableList, Camera) {
+    let cam = CameraConfig {
+        aspect_ratio: 1.,
+        image_width: 600,
+        samples_per_pixel: 200,
+        max_depth: 50,
+        vfov: 40.,
+        lookfrom: point![278., 278., -800.],
+        lookat: point![278., 279., 0.],
+        vup: vector![0., 1., 0.],
+        defocus_angle: 0.,
+        focus_dist: 10.,
+        background: vector![0., 0., 0.],
+    }
+    .construct();
+    let mut world = HittableList::new();
+
+    let red = Material::Lambertian {
+        albedo: Arc::new(SolidColour::from_rgb(0.65, 0.05, 0.05)),
+    };
+    let white = Material::Lambertian {
+        albedo: Arc::new(SolidColour::from_rgb(0.73, 0.73, 0.73)),
+    };
+    let green = Material::Lambertian {
+        albedo: Arc::new(SolidColour::from_rgb(0.12, 0.45, 0.15)),
+    };
+    let light = Material::DiffuseLight {
+        emit: Arc::new(SolidColour::from_rgb(15., 15., 15.)),
+    };
+
+    world.add(Box::new(Quad::new(
+        point![555., 0., 0.],
+        vector![0., 555., 0.],
+        vector![0., 0., 555.],
+        &green,
+    )));
+    world.add(Box::new(Quad::new(
+        point![0., 0., 0.],
+        vector![0., 555., 0.],
+        vector![0., 0., 555.],
+        &red,
+    )));
+    world.add(Box::new(Quad::new(
+        point![343., 554., 332.],
+        vector![-130., 0., 0.],
+        vector![0., 0., -105.],
+        &light,
+    )));
+    world.add(Box::new(Quad::new(
+        point![0., 0., 0.],
+        vector![555., 0., 0.],
+        vector![0., 0., 555.],
+        &white,
+    )));
+    world.add(Box::new(Quad::new(
+        point![555., 555., 555.],
+        vector![-555., 0., 0.],
+        vector![0., 0., -555.],
+        &white,
+    )));
+    world.add(Box::new(Quad::new(
+        point![0., 0., 555.],
+        vector![555., 0., 0.],
+        vector![0., 555., 0.],
+        &white,
+    )));
+
+    let box1 = make_box(point![0., 0., 0.], point![165., 330., 165.], &white);
+    let box1 = RotateY::new(Arc::new(box1), 15.);
+    let box1 = Translate::new(Arc::new(box1), vector![265., 0., 295.]);
+    world.add(Box::new(ConstantMedium::new(
+        Arc::new(box1),
+        0.01,
+        Arc::new(SolidColour::new(vector![0., 0., 0.])),
+    )));
+
+    let box2 = make_box(point![0., 0., 0.], point![165., 166., 165.], &white);
+    let box2 = RotateY::new(Arc::new(box2), -18.);
+    let box2 = Translate::new(Arc::new(box2), vector![130., 0., 65.]);
+    world.add(Box::new(ConstantMedium::new(
+        Arc::new(box2),
+        0.01,
+        Arc::new(SolidColour::new(vector![1., 1., 1.])),
+    )));
+
+    (world, cam)
+}
 
 pub fn cornel_box() -> (HittableList, Camera) {
     let cam = CameraConfig {
@@ -45,12 +257,52 @@ pub fn cornel_box() -> (HittableList, Camera) {
         emit: Arc::new(SolidColour::from_rgb(15., 15., 15.)),
     };
 
-    world.add(Box::new(Quad::new(point![555., 0., 0.], vector![0., 555., 0.], vector![0., 0., 555.], &green)));
-    world.add(Box::new(Quad::new(point![0., 0., 0.], vector![0., 555., 0.], vector![0., 0., 555.], &red)));
-    world.add(Box::new(Quad::new(point![343., 554., 332.], vector![-130., 0., 0.], vector![0., 0., -105.], &light)));
-    world.add(Box::new(Quad::new(point![0., 0., 0.], vector![555., 0., 0.], vector![0., 0., 555.], &white)));
-    world.add(Box::new(Quad::new(point![555., 555., 555.], vector![-555., 0., 0.], vector![0., 0., -555.], &white)));
-    world.add(Box::new(Quad::new(point![0., 0., 555.], vector![555., 0., 0.], vector![0., 555., 0.], &white)));
+    world.add(Box::new(Quad::new(
+        point![555., 0., 0.],
+        vector![0., 555., 0.],
+        vector![0., 0., 555.],
+        &green,
+    )));
+    world.add(Box::new(Quad::new(
+        point![0., 0., 0.],
+        vector![0., 555., 0.],
+        vector![0., 0., 555.],
+        &red,
+    )));
+    world.add(Box::new(Quad::new(
+        point![343., 554., 332.],
+        vector![-130., 0., 0.],
+        vector![0., 0., -105.],
+        &light,
+    )));
+    world.add(Box::new(Quad::new(
+        point![0., 0., 0.],
+        vector![555., 0., 0.],
+        vector![0., 0., 555.],
+        &white,
+    )));
+    world.add(Box::new(Quad::new(
+        point![555., 555., 555.],
+        vector![-555., 0., 0.],
+        vector![0., 0., -555.],
+        &white,
+    )));
+    world.add(Box::new(Quad::new(
+        point![0., 0., 555.],
+        vector![555., 0., 0.],
+        vector![0., 555., 0.],
+        &white,
+    )));
+
+    let box1 = make_box(point![0., 0., 0.], point![165., 330., 165.], &white);
+    let box1 = RotateY::new(Arc::new(box1), 15.);
+    let box1 = Translate::new(Arc::new(box1), vector![265., 0., 295.]);
+    world.add(Box::new(box1));
+
+    let box2 = make_box(point![0., 0., 0.], point![165., 165., 165.], &white);
+    let box2 = RotateY::new(Arc::new(box2), -18.);
+    let box2 = Translate::new(Arc::new(box2), vector![130., 0., 65.]);
+    world.add(Box::new(box2));
 
     (world, cam)
 }

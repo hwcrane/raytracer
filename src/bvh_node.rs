@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, sync::Arc};
 
-use crate::{aabb::Aabb, hittable::Hittable, interval::Interval};
+use crate::{aabb::Aabb, hittable::Hittable, interval::Interval, hittable_list::HittableList};
 use rand::Rng;
 
 pub struct BvhNode {

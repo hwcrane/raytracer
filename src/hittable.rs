@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{ray::Ray, interval::Interval, aabb::Aabb};
 
 use super::hit_record::HitRecord;

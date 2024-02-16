@@ -4,9 +4,27 @@ pub struct Interval {
     pub max: f64,
 }
 
+impl std::ops::Add<f64> for Interval {
+    type Output = Self;
+    fn add(self, rhs: f64) -> Self::Output {
+        Interval::new(self.min + rhs, self.max + rhs)
+    }
+}
+
+impl std::ops::Add<Interval> for f64{
+    type Output = Interval;
+    fn add(self, rhs: Interval) -> Self::Output {
+        rhs + self
+    }
+}
+
 impl Interval {
     pub fn new(min: f64, max: f64) -> Self {
         Interval { min, max }
+    }
+
+    pub fn universe() -> Self {
+        Interval { min: f64::MIN, max: f64::MAX }
     }
 
     pub fn merge(a: Interval, b: Interval) -> Interval {

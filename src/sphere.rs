@@ -1,4 +1,4 @@
-use std::f64::consts::PI;
+use std::{f64::consts::PI, sync::Arc};
 
 use nalgebra::{vector, Point3, Vector3};
 
