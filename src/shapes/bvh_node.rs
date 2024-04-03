@@ -1,7 +1,13 @@
 use std::{cmp::Ordering, sync::Arc};
 
-use crate::{aabb::Aabb, hittable::Hittable, interval::Interval, hittable_list::HittableList};
 use rand::Rng;
+
+use crate::{
+    core::{HitRecord, Hittable, Ray},
+    utility::Interval,
+};
+
+use super::Aabb;
 
 pub struct BvhNode {
     left: Arc<dyn Hittable>,
@@ -43,11 +49,7 @@ fn box_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>, axis: usize) -> Ord
         .unwrap()
 }
 impl Hittable for BvhNode {
-    fn hit(
-        &self,
-        ray: &crate::ray::Ray,
-        ray_t: crate::interval::Interval,
-    ) -> Option<crate::hit_record::HitRecord> {
+    fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<HitRecord> {
         if !self.bbox.hit(ray, ray_t) {
             return None;
         }

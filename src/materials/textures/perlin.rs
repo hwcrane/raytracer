@@ -1,7 +1,8 @@
 use nalgebra::{vector, Point3, Vector3};
 use rand::Rng;
 
-use crate::random::rng_vec_bound;
+use crate::utility::random::rng_vec_bound;
+
 
 pub struct Perlin {
     ranvec: Vec<Vector3<f64>>,

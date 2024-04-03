@@ -4,10 +4,9 @@ use nalgebra::{vector, Point3, Vector3};
 use rand::random;
 use rayon::prelude::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 
-use crate::{
-    hittable::Hittable, hittable_list::HittableList, interval::Interval, random::rng_in_unit_disk,
-    ray::Ray,
-};
+use crate::utility::{random::rng_in_unit_disk, Interval};
+
+use super::{Hittable, Ray};
 
 pub struct CameraConfig {
     pub aspect_ratio: f64,

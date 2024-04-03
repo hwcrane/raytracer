@@ -10,5 +10,4 @@ pub use solid::SolidColour;
 pub use image::ImageTexture;
 pub use checker::Checker;
 pub use noise_texture::NoiseTexture;
-
-use perlin::Perlin;
+pub use perlin::Perlin;

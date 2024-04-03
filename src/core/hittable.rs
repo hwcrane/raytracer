@@ -1,8 +1,7 @@
-use std::sync::Arc;
 
-use crate::{ray::Ray, interval::Interval, aabb::Aabb};
+use crate::{shapes::Aabb, utility::Interval};
 
-use super::hit_record::HitRecord;
+use super::{hit_record::HitRecord, Ray};
 
 pub trait Hittable: Send + Sync {
     fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<HitRecord>;

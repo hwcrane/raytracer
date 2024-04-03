@@ -3,10 +3,7 @@ use std::sync::Arc;
 use nalgebra::vector;
 use rand::random;
 
-use crate::{
-    hit_record::HitRecord, hittable::Hittable, interval::Interval, material::Material,
-    textures::Texture,
-};
+use crate::{core::{HitRecord, Hittable, Ray}, materials::{Material, Texture}, shapes::Aabb, utility::Interval};
 
 pub struct ConstantMedium {
     boundary: Arc<dyn Hittable>,
@@ -27,15 +24,15 @@ impl ConstantMedium {
 }
 
 impl Hittable for ConstantMedium {
-    fn bounding_box(&self) -> &crate::aabb::Aabb {
+    fn bounding_box(&self) -> &Aabb {
         self.boundary.bounding_box()
     }
 
     fn hit(
         &self,
-        ray: &crate::ray::Ray,
-        ray_t: crate::interval::Interval,
-    ) -> Option<crate::hit_record::HitRecord> {
+        ray: &Ray,
+        ray_t: Interval,
+    ) -> Option<HitRecord> {
         let mut rec1 = self.boundary.hit(ray, Interval::universe())?;
         let mut rec2 = self
             .boundary

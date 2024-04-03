@@ -1,8 +1,8 @@
-use std::sync::Arc;
+use nalgebra::{point, vector, Point3, Vector3};
 
-use nalgebra::{vector, Point3, Vector3, point};
+use crate::{core::{HitRecord, Hittable, HittableList, Ray}, materials::Material, utility::Interval};
 
-use crate::{aabb::Aabb, hit_record::HitRecord, hittable::Hittable, material::Material, hittable_list::HittableList};
+use super::Aabb;
 
 pub struct Quad {
     q: Point3<f64>,
@@ -38,9 +38,9 @@ impl Quad {
 impl Hittable for Quad {
     fn hit(
         &self,
-        ray: &crate::ray::Ray,
-        ray_t: crate::interval::Interval,
-    ) -> Option<crate::hit_record::HitRecord> {
+        ray: &Ray,
+        ray_t: Interval,
+    ) -> Option<HitRecord> {
         let denom = self.normal.dot(ray.direction());
 
         if denom.abs() < 1e-8 {
@@ -91,12 +91,42 @@ pub fn make_box(a: Point3<f64>, b: Point3<f64>, mat: &Material) -> HittableList 
     let dy = vector![0., max.y - min.y, 0.];
     let dz = vector![0., 0., max.z - min.z];
 
-    sides.add(Box::new(Quad::new(point![min.x, min.y, max.z], dx, dy, mat))); // front
-    sides.add(Box::new(Quad::new(point![max.x, min.y, max.z], -dz, dy, mat))); // right
-    sides.add(Box::new(Quad::new(point![max.x, min.y, min.z], -dx, dy, mat))); // back
-    sides.add(Box::new(Quad::new(point![min.x, min.y, min.z], dz, dy, mat))); // left
-    sides.add(Box::new(Quad::new(point![min.x, max.y, max.z], dx, -dz, mat))); // top
-    sides.add(Box::new(Quad::new(point![min.x, min.y, min.z], dx, dy, mat))); // top
+    sides.add(Box::new(Quad::new(
+        point![min.x, min.y, max.z],
+        dx,
+        dy,
+        mat,
+    ))); // front
+    sides.add(Box::new(Quad::new(
+        point![max.x, min.y, max.z],
+        -dz,
+        dy,
+        mat,
+    ))); // right
+    sides.add(Box::new(Quad::new(
+        point![max.x, min.y, min.z],
+        -dx,
+        dy,
+        mat,
+    ))); // back
+    sides.add(Box::new(Quad::new(
+        point![min.x, min.y, min.z],
+        dz,
+        dy,
+        mat,
+    ))); // left
+    sides.add(Box::new(Quad::new(
+        point![min.x, max.y, max.z],
+        dx,
+        -dz,
+        mat,
+    ))); // top
+    sides.add(Box::new(Quad::new(
+        point![min.x, min.y, min.z],
+        dx,
+        dy,
+        mat,
+    ))); // top
 
-    return sides
+    sides
 }

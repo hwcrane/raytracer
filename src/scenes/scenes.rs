@@ -4,17 +4,11 @@ use nalgebra::{point, vector, Vector3};
 use rand::{random, Rng};
 
 use crate::{
-    bvh_node::BvhNode,
-    camera::{Camera, CameraConfig},
-    constant_medium::ConstantMedium,
-    hittable_list::HittableList,
-    material::Material,
-    quad::{make_box, Quad},
-    random::rng_vec_bound,
-    rotation::RotateY,
-    sphere::Sphere,
-    textures::{Checker, ImageTexture, NoiseTexture, SolidColour},
-    translate::Translate,
+    core::{Camera, CameraConfig, HittableList},
+    materials::{Checker, ImageTexture, Material, NoiseTexture, SolidColour},
+    shapes::{make_box, BvhNode, Quad, Sphere},
+    utility::random::rng_vec_bound,
+    wrappers::{ConstantMedium, RotateY, Translate},
 };
 
 pub type Scene = fn() -> (HittableList, Camera);

@@ -1,7 +1,8 @@
 use image::{ImageResult, DynamicImage, GenericImageView};
 use nalgebra::{vector, Point3, Vector3};
 
-use crate::interval::Interval;
+
+use crate::utility::Interval;
 
 use super::Texture;
 

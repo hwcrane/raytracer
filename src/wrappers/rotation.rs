@@ -2,7 +2,11 @@ use std::sync::Arc;
 
 use nalgebra::{point, vector};
 
-use crate::{aabb::Aabb, hittable::Hittable, ray::Ray};
+use crate::{
+    core::{HitRecord, Hittable, Ray},
+    shapes::Aabb,
+    utility::Interval,
+};
 
 pub struct RotateY {
     object: Arc<dyn Hittable>,
@@ -53,11 +57,7 @@ impl RotateY {
 }
 
 impl Hittable for RotateY {
-    fn hit(
-        &self,
-        ray: &crate::ray::Ray,
-        ray_t: crate::interval::Interval,
-    ) -> Option<crate::hit_record::HitRecord> {
+    fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<HitRecord> {
         let mut origin = *ray.origin();
         let mut direction = *ray.direction();
 

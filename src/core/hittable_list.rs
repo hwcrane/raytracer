@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
-use crate::{hittable::Hittable, interval::Interval, aabb::Aabb};
 
-use super::hit_record::HitRecord;
+use crate::{shapes::Aabb, utility::Interval};
+
+use super::{hit_record::HitRecord, Hittable, Ray};
 
 pub struct HittableList {
     pub objects: Vec<Arc<dyn Hittable>>,
@@ -27,7 +28,7 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, ray: &crate::ray::Ray, ray_t: Interval) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<HitRecord> {
         let mut best_rec = None;
         let mut hit_anything = false;
         let mut closest = ray_t;

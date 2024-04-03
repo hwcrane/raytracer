@@ -3,7 +3,9 @@ use std::sync::Arc;
 use nalgebra::{Vector3, Point3, vector};
 use rand::random;
 
-use crate::{hit_record::HitRecord, random::rng_unit_vec, ray::Ray, textures::Texture};
+use crate::{core::{HitRecord, Ray}, utility::random::rng_unit_vec};
+
+use super::textures::Texture;
 
 #[derive(Clone)]
 pub enum Material {

@@ -1,10 +1,11 @@
-use std::{f64::consts::PI, sync::Arc};
+use std::f64::consts::PI;
 
 use nalgebra::{vector, Point3, Vector3};
 
-use crate::{aabb::Aabb, hittable::Hittable, interval::Interval, material::Material, ray::Ray};
+use crate::{core::{HitRecord, Hittable, Ray}, materials::Material, utility::Interval};
 
-use super::hit_record::HitRecord;
+use super::Aabb;
+
 
 pub struct Sphere {
     center1: Point3<f64>,
