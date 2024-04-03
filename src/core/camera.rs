@@ -4,41 +4,8 @@ use nalgebra::{vector, Point3, Vector3};
 use rand::random;
 use rayon::prelude::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 
+use super::{camera_builder::CameraBuilder, Hittable, Ray};
 use crate::utility::{random::rng_in_unit_disk, Interval};
-
-use super::{Hittable, Ray};
-
-pub struct CameraConfig {
-    pub aspect_ratio: f64,
-    pub image_width: u32,
-    pub samples_per_pixel: u32,
-    pub max_depth: u32,
-    pub vfov: f64,
-    pub lookat: Point3<f64>,
-    pub lookfrom: Point3<f64>,
-    pub vup: Vector3<f64>,
-    pub defocus_angle: f64,
-    pub focus_dist: f64,
-    pub background: Vector3<f64>,
-}
-
-impl CameraConfig {
-    pub fn construct(self) -> Camera {
-        Camera::new(
-            self.aspect_ratio,
-            self.image_width,
-            self.samples_per_pixel,
-            self.max_depth,
-            self.vfov,
-            self.lookfrom,
-            self.lookat,
-            self.vup,
-            self.defocus_angle,
-            self.focus_dist,
-            self.background,
-        )
-    }
-}
 
 pub struct Camera {
     aspect_ratio: f64,
@@ -65,20 +32,24 @@ pub struct Camera {
 }
 
 impl Camera {
+    pub fn builder() -> CameraBuilder {
+        CameraBuilder::default()
+    }
+
     pub fn new(
         aspect_ratio: f64,
         image_width: u32,
         samples_per_pixel: u32,
         max_depth: u32,
         vfov: f64,
-        lookfrom: Point3<f64>,
         lookat: Point3<f64>,
+        lookfrom: Point3<f64>,
         vup: Vector3<f64>,
         defocus_angle: f64,
         focus_dist: f64,
         background: Vector3<f64>,
-    ) -> Self {
-        let image_height: u32 = (image_width as f64 / aspect_ratio) as u32;
+    ) -> Camera {
+        let image_height = (image_width as f64 / aspect_ratio) as u32;
 
         let center = lookfrom;
 
@@ -97,8 +68,8 @@ impl Camera {
         let viewport_v = viewport_height * -v;
 
         // Delta vectors
-        let delta_u: Vector3<f64> = viewport_u / image_width as f64;
-        let delta_v: Vector3<f64> = viewport_v / image_height as f64;
+        let delta_u = viewport_u / image_width as f64;
+        let delta_v = viewport_v / image_height as f64;
 
         // Location of upper left
         let viewport_upper_left = center - (focus_dist * w) - (viewport_u / 2.) - (viewport_v / 2.);
@@ -114,8 +85,8 @@ impl Camera {
             samples_per_pixel,
             max_depth,
             vfov,
-            lookfrom,
             lookat,
+            lookfrom,
             vup,
             defocus_angle,
             focus_dist,

@@ -4,7 +4,7 @@ use nalgebra::{point, vector, Vector3};
 use rand::{random, Rng};
 
 use crate::{
-    core::{Camera, CameraConfig, HittableList},
+    core::{Camera, HittableList},
     materials::{Checker, ImageTexture, Material, NoiseTexture, SolidColour},
     shapes::{make_box, BvhNode, Quad, Sphere},
     utility::random::rng_vec_bound,
@@ -18,20 +18,19 @@ pub fn final_scene(
     samples_per_pixel: u32,
     max_depth: u32,
 ) -> (HittableList, Camera) {
-    let cam = CameraConfig {
-        aspect_ratio: 1.,
-        image_width,
-        samples_per_pixel,
-        max_depth,
-        vfov: 40.,
-        lookfrom: point![478., 278., -600.],
-        lookat: point![278., 278., 0.],
-        vup: vector![0., 1., 0.],
-        defocus_angle: 0.,
-        focus_dist: 10.,
-        background: vector![0., 0., 0.],
-    }
-    .construct();
+    let cam = Camera::builder()
+        .aspect_ratio(1.)
+        .image_width(image_width)
+        .samples_per_pixel(samples_per_pixel)
+        .max_depth(max_depth)
+        .vfov(40.)
+        .lookfrom(point![478., 278., -600.])
+        .lookat(point![278., 278., 0.])
+        .vup(vector![0., 1., 0.])
+        .defocus_angle(0.)
+        .focus_dist(10.)
+        .background(vector![0., 0., 0.])
+        .build();
 
     let mut boxes1 = HittableList::new();
     let ground = Material::Lambertian {
@@ -134,20 +133,19 @@ pub fn final_scene(
     (world, cam)
 }
 pub fn cornel_smoke() -> (HittableList, Camera) {
-    let cam = CameraConfig {
-        aspect_ratio: 1.,
-        image_width: 600,
-        samples_per_pixel: 200,
-        max_depth: 50,
-        vfov: 40.,
-        lookfrom: point![278., 278., -800.],
-        lookat: point![278., 279., 0.],
-        vup: vector![0., 1., 0.],
-        defocus_angle: 0.,
-        focus_dist: 10.,
-        background: vector![0., 0., 0.],
-    }
-    .construct();
+    let cam = Camera::builder()
+        .aspect_ratio(1.)
+        .image_width(600)
+        .samples_per_pixel(200)
+        .max_depth(50)
+        .vfov(40.)
+        .lookfrom(point![278., 278., -800.])
+        .lookat(point![278., 279., 0.])
+        .vup(vector![0., 1., 0.])
+        .defocus_angle(0.)
+        .focus_dist(10.)
+        .background(vector![0., 0., 0.])
+        .build();
     let mut world = HittableList::new();
 
     let red = Material::Lambertian {
@@ -222,20 +220,20 @@ pub fn cornel_smoke() -> (HittableList, Camera) {
 }
 
 pub fn cornel_box() -> (HittableList, Camera) {
-    let cam = CameraConfig {
-        aspect_ratio: 1.,
-        image_width: 600,
-        samples_per_pixel: 200,
-        max_depth: 50,
-        vfov: 40.,
-        lookfrom: point![278., 278., -800.],
-        lookat: point![278., 279., 0.],
-        vup: vector![0., 1., 0.],
-        defocus_angle: 0.,
-        focus_dist: 10.,
-        background: vector![0., 0., 0.],
-    }
-    .construct();
+    let cam = Camera::builder()
+        .aspect_ratio(1.)
+        .image_width(600)
+        .samples_per_pixel(200)
+        .max_depth(50)
+        .vfov(40.)
+        .lookfrom(point![278., 278., -800.])
+        .lookat(point![278., 279., 0.])
+        .vup(vector![0., 1., 0.])
+        .defocus_angle(0.)
+        .focus_dist(10.)
+        .background(vector![0., 0., 0.])
+        .build();
+
     let mut world = HittableList::new();
 
     let red = Material::Lambertian {
@@ -302,20 +300,19 @@ pub fn cornel_box() -> (HittableList, Camera) {
 }
 
 pub fn simple_light() -> (HittableList, Camera) {
-    let cam = CameraConfig {
-        aspect_ratio: 16. / 9.,
-        image_width: 400,
-        samples_per_pixel: 500,
-        max_depth: 500,
-        vfov: 20.,
-        lookfrom: point![26., 3., 6.],
-        lookat: point![0., 2., 0.],
-        vup: vector![0., 1., 0.],
-        defocus_angle: 0.,
-        focus_dist: 10.,
-        background: vector![0., 0., 0.],
-    }
-    .construct();
+    let cam = Camera::builder()
+        .aspect_ratio(16. / 9.)
+        .image_width(400)
+        .samples_per_pixel(500)
+        .max_depth(500)
+        .vfov(20.)
+        .lookfrom(point![26., 3., 6.])
+        .lookat(point![0., 2., 0.])
+        .vup(vector![0., 1., 0.])
+        .defocus_angle(0.)
+        .focus_dist(10.)
+        .background(vector![0., 0., 0.])
+        .build();
 
     let mut world = HittableList::new();
     let pertext = Arc::new(NoiseTexture::new(4.));
@@ -340,20 +337,19 @@ pub fn simple_light() -> (HittableList, Camera) {
 }
 
 pub fn quads() -> (HittableList, Camera) {
-    let cam = CameraConfig {
-        aspect_ratio: 1.,
-        image_width: 400,
-        samples_per_pixel: 100,
-        max_depth: 50,
-        vfov: 80.,
-        lookfrom: point![0., 0., 9.],
-        lookat: point![0., 0., 0.],
-        vup: vector![0., 1., 0.],
-        defocus_angle: 0.,
-        focus_dist: 10.,
-        background: vector![0.7, 0.8, 1.],
-    }
-    .construct();
+    let cam = Camera::builder()
+        .aspect_ratio(1.)
+        .image_width(400)
+        .samples_per_pixel(100)
+        .max_depth(50)
+        .vfov(80.)
+        .lookfrom(point![0., 0., 9.])
+        .lookat(point![0., 0., 0.])
+        .vup(vector![0., 1., 0.])
+        .defocus_angle(0.)
+        .focus_dist(10.)
+        .background(vector![0.7, 0.8, 1.])
+        .build();
 
     let mut world = HittableList::new();
 
@@ -407,20 +403,19 @@ pub fn quads() -> (HittableList, Camera) {
 }
 
 pub fn two_perlin_spheres() -> (HittableList, Camera) {
-    let cam = CameraConfig {
-        aspect_ratio: 16. / 9.,
-        image_width: 400,
-        samples_per_pixel: 100,
-        max_depth: 50,
-        vfov: 20.,
-        lookfrom: point![13., 2., 3.],
-        lookat: point![0., 0., 0.],
-        vup: vector![0., 1., 0.],
-        defocus_angle: 0.,
-        focus_dist: 10.,
-        background: vector![0.7, 0.8, 1.],
-    }
-    .construct();
+    let cam = Camera::builder()
+        .aspect_ratio( 16. / 9.)
+        .image_width( 400)
+        .samples_per_pixel( 100)
+        .max_depth( 50)
+        .vfov( 20.)
+        .lookfrom( point![13., 2., 3.])
+        .lookat( point![0., 0., 0.])
+        .vup( vector![0., 1., 0.])
+        .defocus_angle( 0.)
+        .focus_dist( 10.)
+        .background( vector![0.7, 0.8, 1.])
+    .build();
 
     let mut world = HittableList::new();
     let perlin_texture = Arc::new(NoiseTexture::new(4.));
@@ -442,20 +437,19 @@ pub fn two_perlin_spheres() -> (HittableList, Camera) {
 }
 
 pub fn earth() -> (HittableList, Camera) {
-    let cam = CameraConfig {
-        aspect_ratio: 16. / 9.,
-        image_width: 400,
-        samples_per_pixel: 100,
-        max_depth: 50,
-        vfov: 20.,
-        lookfrom: point![13., 2., 3.],
-        lookat: point![0., 0., 0.],
-        vup: vector![0., 1., 0.],
-        defocus_angle: 0.,
-        focus_dist: 10.,
-        background: vector![0.7, 0.8, 1.],
-    }
-    .construct();
+    let cam = Camera::builder() 
+        .aspect_ratio( 16. / 9.)
+        .image_width( 400)
+        .samples_per_pixel( 100)
+        .max_depth( 50)
+        .vfov( 20.)
+        .lookfrom( point![13., 2., 3.])
+        .lookat( point![0., 0., 0.])
+        .vup( vector![0., 1., 0.])
+        .defocus_angle( 0.)
+        .focus_dist( 10.)
+        .background( vector![0.7, 0.8, 1.])
+    .build();
 
     let earth_texture = Arc::new(ImageTexture::new("earthmap.jpg").expect("Image failed to load"));
     let earth_surface = Material::Lambertian {
@@ -469,20 +463,19 @@ pub fn earth() -> (HittableList, Camera) {
 }
 
 pub fn two_spheres() -> (HittableList, Camera) {
-    let cam = CameraConfig {
-        aspect_ratio: 16. / 9.,
-        image_width: 400,
-        samples_per_pixel: 100,
-        max_depth: 50,
-        vfov: 20.,
-        lookfrom: point![13., 2., 3.],
-        lookat: point![0., 0., 0.],
-        vup: vector![0., 1., 0.],
-        defocus_angle: 0.,
-        focus_dist: 10.,
-        background: vector![0.7, 0.8, 1.],
-    }
-    .construct();
+    let cam = Camera::builder()
+        .aspect_ratio( 16. / 9.)
+        .image_width( 400)
+        .samples_per_pixel( 100)
+        .max_depth( 50)
+        .vfov( 20.)
+        .lookfrom( point![13., 2., 3.])
+        .lookat( point![0., 0., 0.])
+        .vup( vector![0., 1., 0.])
+        .defocus_angle( 0.)
+        .focus_dist( 10.)
+        .background( vector![0.7, 0.8, 1.])
+    .build();
 
     let mut world = HittableList::new();
     let checker = Arc::new(Checker::from_colours(
@@ -510,20 +503,19 @@ pub fn two_spheres() -> (HittableList, Camera) {
 
 /// Generates the scene from the end of the Ray Tracing in One Weekend book
 pub fn random_balls() -> (HittableList, Camera) {
-    let cam = CameraConfig {
-        aspect_ratio: 16. / 9.,
-        image_width: 400,
-        samples_per_pixel: 100,
-        max_depth: 50,
-        vfov: 20.,
-        lookfrom: point![13., 2., 3.],
-        lookat: point![0., 0., 0.],
-        vup: vector![0., 1., 0.],
-        defocus_angle: 10.,
-        focus_dist: 10.,
-        background: vector![0.7, 0.8, 1.],
-    }
-    .construct();
+    let cam = Camera::builder()
+        .aspect_ratio( 16. / 9.)
+        .image_width( 400)
+        .samples_per_pixel( 100)
+        .max_depth( 50)
+        .vfov( 20.)
+        .lookfrom( point![13., 2., 3.])
+        .lookat( point![0., 0., 0.])
+        .vup( vector![0., 1., 0.])
+        .defocus_angle( 10.)
+        .focus_dist( 10.)
+        .background( vector![0.7, 0.8, 1.])
+    .build();
 
     let mut world = HittableList::new();
     let ground_material = Material::Lambertian {
