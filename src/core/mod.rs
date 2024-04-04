@@ -5,7 +5,7 @@ mod hittable_list;
 mod ray;
 mod camera_builder;
 
-pub use camera::Camera;
+pub use camera::{Camera, PixelData};
 pub use hit_record::HitRecord;
 pub use camera_builder::CameraBuilder;
 pub use hittable::Hittable;

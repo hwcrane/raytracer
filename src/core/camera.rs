@@ -2,10 +2,18 @@ use image::{ImageBuffer, Rgb};
 use indicatif::ProgressBar;
 use nalgebra::{vector, Point3, Vector3};
 use rand::random;
-use rayon::prelude::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
+use rayon::prelude::*;
+use std::sync::mpsc::{self, Receiver};
+use std::sync::Arc;
+use std::thread;
 
 use super::{camera_builder::CameraBuilder, Hittable, Ray};
 use crate::utility::{random::rng_in_unit_disk, Interval};
+
+pub struct PixelData {
+    pub index: u32,
+    pub colour: Rgb<u8>,
+}
 
 pub struct Camera {
     aspect_ratio: f64,
@@ -104,35 +112,65 @@ impl Camera {
         }
     }
 
-    pub fn render_par(&self, world: &dyn Hittable) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
-        let bar = ProgressBar::new((self.image_height * self.image_width) as u64);
-        let mut img = ImageBuffer::new(self.image_width, self.image_height);
-        let mut pixels =
-            vec![Rgb([0 as u8, 0 as u8, 0 as u8]); (self.image_height * self.image_width) as usize];
-        (pixels).par_iter_mut().enumerate().for_each(|(n, pixel)| {
-            let i = n as u32 % self.image_width;
-            let j = n as u32 / self.image_width;
+    pub fn render_to_channel(self: Arc<Self>, world: Arc<dyn Hittable + Send + Sync>) -> Receiver<PixelData> {
+        let (sender, receiver) = mpsc::channel();
 
-            bar.inc(1);
+        thread::spawn(move || {
+            (0..self.image_width * self.image_height)
+                .into_par_iter()
+                .for_each_with(sender, |s, n| {
+                    let i = n as u32 % self.image_width;
+                    let j = n as u32 / self.image_width;
 
-            let colour: Vector3<f64> = (0..self.samples_per_pixel)
-                .map(|_| {
-                    let r = self.get_ray(i, j);
-                    self.ray_colour(&r, self.max_depth, world)
-                })
-                .sum();
+                    let colour: Vector3<f64> = (0..self.samples_per_pixel)
+                        .map(|_| {
+                            let r = self.get_ray(i, j);
+                            self.ray_colour(&r, self.max_depth, &world)
+                        })
+                        .sum();
 
-            *pixel = self.make_colour(colour);
+                    let data = PixelData {
+                        index: n,
+                        colour: self.make_colour(colour),
+                    };
+
+                    s.send(data).expect("Failed to send pixel data")
+                });
         });
 
-        bar.finish();
-
-        for (x, y, pixel) in img.enumerate_pixels_mut() {
-            *pixel = pixels[(x + self.image_width * y) as usize];
-        }
-
-        img
+        receiver
     }
+
+    // pub fn render_par(&self, world: &dyn Hittable) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
+    //     let bar = ProgressBar::new((self.image_height * self.image_width) as u64);
+    //     let mut img = ImageBuffer::new(self.image_width, self.image_height);
+    //     let mut pixels =
+    //         vec![Rgb([0 as u8, 0 as u8, 0 as u8]); (self.image_height * self.image_width) as usize];
+    //
+    //     (pixels).par_iter_mut().enumerate().for_each(|(n, pixel)| {
+    //         let i = n as u32 % self.image_width;
+    //         let j = n as u32 / self.image_width;
+    //
+    //         bar.inc(1);
+    //
+    //         let colour: Vector3<f64> = (0..self.samples_per_pixel)
+    //             .map(|_| {
+    //                 let r = self.get_ray(i, j);
+    //                 self.ray_colour(&r, self.max_depth, world)
+    //             })
+    //             .sum();
+    //
+    //         *pixel = self.make_colour(colour);
+    //     });
+    //
+    //     bar.finish();
+    //
+    //     for (x, y, pixel) in img.enumerate_pixels_mut() {
+    //         *pixel = pixels[(x + self.image_width * y) as usize];
+    //     }
+    //
+    //     img
+    // }
 
     fn get_ray(&self, i: u32, j: u32) -> Ray {
         let pixel_center =
@@ -161,7 +199,7 @@ impl Camera {
         (px * self.delta_u) + (py * self.delta_v)
     }
 
-    fn ray_colour(&self, ray: &Ray, depth: u32, world: &dyn Hittable) -> Vector3<f64> {
+    fn ray_colour(&self, ray: &Ray, depth: u32, world: &Arc<dyn Hittable + Send + Sync>) -> Vector3<f64> {
         if depth == 0 {
             return vector!(0., 0., 0.);
         }

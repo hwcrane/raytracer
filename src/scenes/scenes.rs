@@ -61,12 +61,12 @@ pub fn final_scene(
     let light = Material::DiffuseLight {
         emit: Arc::new(SolidColour::new(vector![7., 7., 7.])),
     };
-    world.add(Box::new(Quad::new(
+    world.add(Quad::boxed(
         point![123., 554., 147.],
         vector![300., 0., 0.],
         vector![0., 0., 265.],
         &light,
-    )));
+    ));
 
     let center1 = point!(400., 400., 200.);
     let center2 = center1 + vector!(30., 0., 0.);

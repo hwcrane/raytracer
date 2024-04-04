@@ -16,6 +16,10 @@ pub struct Quad {
 }
 
 impl Quad {
+    pub fn boxed(q: Point3<f64>, u: Vector3<f64>, v: Vector3<f64>, mat: &Material) -> Box<Quad>{
+        Box::new(Quad::new(q, u, v, mat))
+    }
+
     pub fn new(q: Point3<f64>, u: Vector3<f64>, v: Vector3<f64>, mat: &Material) -> Quad {
         let bbox = Aabb::from_points(q, q + u + v).pad();
         let n = u.cross(&v);

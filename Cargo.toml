@@ -11,3 +11,5 @@ indicatif = "0.17.7"
 nalgebra = "0.32.3"
 rand = {version = "0.8.5", features = ['small_rng']}
 rayon = "1.8.1"
+eframe = "0.27.2"
+
